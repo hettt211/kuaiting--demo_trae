@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>快听功能原型</title>
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <style>
+        :root {
+            --primary-text: #ffffff;
+            --secondary-text: #b0b0b0;
+            --background-start: #2d3436;
+            --background-end: #1d1d1d;
+            --accent-color: #f39c12;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #000;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            position: relative;
+            background: var(--background-end);
+        }
+
+        .swiper-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .swiper-slide {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            box-sizing: border-box;
+            padding: 20px;
+            padding-bottom: 80px; /* Space for bottom controls */
+            color: var(--primary-text);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(20px) brightness(0.5);
+            transform: scale(1.2);
+            z-index: 1;
+        }
+
+        .slide-content {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .audio-visualizer {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .visualizer-bars {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 150px;
+        }
+
+        .visualizer-bars .bar {
+            width: 8px;
+            height: 20px;
+            margin: 0 4px;
+            background-color: var(--accent-color);
+            border-radius: 4px;
+            animation: sound 0s infinite ease-in-out;
+        }
+        
+        .swiper-slide-active .visualizer-bars .bar {
+            animation-duration: 1.5s;
+        }
+
+        .bar:nth-child(1) { animation-delay: 0s; }
+        .bar:nth-child(2) { animation-delay: 0.2s; }
+        .bar:nth-child(3) { animation-delay: 0.4s; }
+        .bar:nth-child(4) { animation-delay: 0.6s; }
+        .bar:nth-child(5) { animation-delay: 0.8s; }
+
+        @keyframes sound {
+            0%, 100% { height: 20px; }
+            50% { height: 100px; }
+        }
+
+        .info-panel {
+            width: 100%;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+
+        .title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .author {
+            font-size: 16px;
+            color: var(--secondary-text);
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .ai-transcript {
+            height: 6em; /* approx 3 lines */
+            overflow: hidden;
+            position: relative;
+            line-height: 2em;
+            font-size: 16px;
+        }
+        
+        .ai-transcript .transcript-content {
+            position: absolute;
+            width: 100%;
+            animation: scroll-text 0s linear infinite;
+        }
+
+        .swiper-slide-active .ai-transcript .transcript-content {
+             animation-duration: 20s;
+        }
+
+        @keyframes scroll-text {
+            from { transform: translateY(0); }
+            to { transform: translateY(-100%); }
+        }
+
+        .controls {
+            position: absolute;
+            right: 15px;
+            bottom: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 3;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: transform 0.2s, color 0.2s;
+        }
+        
+        .control-btn:active {
+            transform: scale(0.9);
+        }
+
+        .control-btn i {
+            font-size: 24px;
+            color: var(--primary-text);
+        }
+        
+        .control-btn.liked i {
+            color: #e74c3c;
+        }
+
+        .progress-bar {
+            position: absolute;
+            bottom: 60px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            z-index: 3;
+        }
+
+        .progress {
+            width: 0%;
+            height: 100%;
+            background: var(--accent-color);
+            animation: fill-progress 0s linear forwards;
+        }
+        
+        .swiper-slide-active .progress {
+            animation-duration: 30s; /* Mock duration */
+        }
+
+        @keyframes fill-progress {
+            from { width: 0%; }
+            to { width: 100%; }
+        }
+
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: #1a1a1a;
+            z-index: 10;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            color: var(--secondary-text);
+        }
+        .nav-item {
+            font-size: 14px;
+        }
+        .nav-item.active {
+            color: var(--accent-color);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="swiper-container">
+            <div class="swiper-wrapper" id="swiper-wrapper"></div>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item">首页</div>
+            <div class="nav-item active">快听</div>
+            <div class="nav-item">会员</div>
+            <div class="nav-item">我的</div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script>
+        const mockData = [
+            {
+                id: 1,
+                title: '深度学习与未来：AI如何重塑世界',
+                author: '科技相对论',
+                cover: 'https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8YWJzdHJhY3QsYXJ0fHx8fHx8MTY4MTM4ODIzMQ&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=1080',
+                transcript: '今天我们探讨人工智能的最新进展... 深度学习模型，特别是Transformer架构，正在推动自然语言处理的革命... 这不仅仅是技术变革，更是社会结构的深刻调整...'
+            },
+            {
+                id: 2,
+                title: '冥想入门：在喧嚣中寻找片刻宁静',
+                author: '心灵驿站',
+                cover: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8Z3JhZGllbnQsbWluaW1hbHx8fHx8MTY4MTM4ODI1OQ&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=1080',
+                transcript: '欢迎来到心灵驿站... 让我们一起开始今天的冥想练习... 找一个舒适的姿势坐下... 轻轻闭上眼睛... 感受你的呼吸，一呼，一吸...'
+            },
+            {
+                id: 3,
+                title: '宇宙简史：从大爆炸到人类文明',
+                author: '科学有故事',
+                cover: 'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8c3BhY2UsZ2FsYXh5fHx8fHx8MTY4MTM4ODMwMQ&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=1080',
+                transcript: '138亿年前，一个奇点发生了大爆炸... 宇宙从此诞生... 恒星、行星、星系... 在浩瀚的宇宙中，一颗蓝色星球孕育了生命...'
+            },
+            {
+                id: 4,
+                title: '赛博朋克之父：威廉·吉布森的数字预言',
+                author: '文化前沿',
+                cover: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8Y3liZXJwdW5rLGNpdHl8fHx8fHwxNjgxMzg4MzI1&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=1080',
+                transcript: '“赛博空间”，这个词由威廉·吉布森创造... 他的小说《神经漫游者》描绘了一个高科技、低生活的未来... 这种美学影响了后来的无数电影和游戏...'
+            },
+            {
+                id: 5,
+                title: '环球美食之旅：舌尖上的意大利',
+                author: '吃货日记',
+                cover: 'https://images.unsplash.com/photo-1551218808-94e220e084d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8Zm9vZCxwYXN0YXx8fHx8fDE2ODEzODgzNDg&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=1080',
+                transcript: '意大利不仅仅有披萨和意面... 北部的烩饭，南部的海鲜... 每一种风味都蕴含着当地的文化和历史... 让我们从罗马开始...'
+            },
+            {
+                id: 6,
+                title: '独立音乐人访谈：噪音背后的故事',
+                author: '音乐蜂巢',
+                cover: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8bXVzaWMsY29uY2VydHx8fHx8fDE2ODEzODgzNzE&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=1080',
+                transcript: '很多人觉得我们的音乐很吵... 但其实每段旋律背后都有一个故事... 关于城市的记忆，关于青春的迷惘... 这就是我们表达的方式...'
+            },
+            {
+                id: 7,
+                title: '金融的逻辑：趣解行为经济学',
+                author: '理财轻松点',
+                cover: 'https://images.unsplash.com/photo-1642073317492-22335a4e5623?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8ZmluYW5jZSxzdG9ja3N8fHx8fHwxNjgxMzg4Mzk0&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=1080',
+                transcript: '你为什么会在打折时买一堆不需要的东西？... 这就是行为经济学要解释的... “损失厌恶”、“锚定效应”... 了解这些能让你更理性地消费...'
+            },
+            {
+                id: 8,
+                title: '深夜电台：一封未寄出的信',
+                author: '城市夜归人',
+                cover: 'https://images.unsplash.com/photo-1505640034296-c8d75a7f54e3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8bmlnaHQsY2l0eSxsmFpbnx8fHx8fDE2ODEzODg0MTc&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=1080',
+                transcript: '听众朋友们晚上好... 今天我们要分享一个特别的故事... 一封写了很久，却始终没有寄出的信... 信的开头是这样写的：亲爱的...'
+            },
+            {
+                id: 9,
+                title: '极简生活法则：告别不必要的物品',
+                author: '生活整理师',
+                cover: 'https://images.unsplash.com/photo-1517842645767-c6f90405774b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8bWluaW1hbGlzbSxob21lfHx8fHx8MTY4MTM4ODQ0MA&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=1080',
+                transcript: '“断舍离”的核心是认清自己真正的需求... 你的生活空间是你内心的延伸... 当你清理了物品，也就清理了思绪... 从一个抽屉开始...'
+            },
+            {
+                id: 10,
+                title: '历史悬案：消失的古文明之谜',
+                author: '迷雾档案',
+                cover: 'https://images.unsplash.com/photo-1526772858142-a42a59f8b3d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8cnVpbnMsYW5jaWVudHx8fHx8fDE2ODEzODg0NjM&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=1080',
+                transcript: '玛雅文明为何在一夜之间消失？... 复活节岛的巨石像是谁建造的？... 这些历史的谜题至今没有答案... 但考古学家们发现了一些惊人的线索...'
+            }
+        ];
+
+        const swiperWrapper = document.getElementById('swiper-wrapper');
+
+        mockData.forEach(item => {
+            const slide = `
+                <div class="swiper-slide" data-id="${item.id}">
+                    <div class="slide-background" style="background-image: url('${item.cover}');"></div>
+                    <div class="slide-content">
+                        <div class="audio-visualizer">
+                            <div class="visualizer-bars">
+                                <div class="bar"></div>
+                                <div class="bar"></div>
+                                <div class="bar"></div>
+                                <div class="bar"></div>
+                                <div class="bar"></div>
+                            </div>
+                        </div>
+                        <div class="info-panel">
+                            <div class="title">${item.title}</div>
+                            <div class="author">来自: ${item.author}</div>
+                            <div class="ai-transcript">
+                                <div class="transcript-content">
+                                    ${(item.transcript + ' ').repeat(5)} 
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="controls">
+                        <div class="control-btn like-btn">
+                            <i class="fa-solid fa-heart"></i>
+                        </div>
+                        <div class="control-btn">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <div class="control-btn">
+                            <i class="fa-solid fa-share"></i>
+                        </div>
+                        <div class="control-btn">
+                            <i class="fa-solid fa-ellipsis"></i>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress"></div>
+                    </div>
+                </div>
+            `;
+            swiperWrapper.innerHTML += slide;
+        });
+
+        const mySwiper = new Swiper('.swiper-container', {
+            direction: 'vertical',
+            loop: true,
+        });
+
+        // --- Interactions ---
+        document.querySelectorAll('.swiper-slide').forEach(slide => {
+            let clickCount = 0;
+            let timeout;
+
+            slide.addEventListener('click', (e) => {
+                // Prevent clicks on controls from triggering play/pause/like
+                if (e.target.closest('.controls')) {
+                    return;
+                }
+
+                clickCount++;
+                if (clickCount === 1) {
+                    timeout = setTimeout(() => {
+                        // Single click: Play/Pause
+                        slide.classList.toggle('is-playing');
+                        console.log('Play/Pause on slide', slide.dataset.id);
+                        clickCount = 0;
+                    }, 250); // 250ms delay to wait for a potential double click
+                } else if (clickCount === 2) {
+                    // Double click: Like
+                    clearTimeout(timeout);
+                    const likeBtn = slide.querySelector('.like-btn');
+                    likeBtn.classList.toggle('liked');
+                    console.log('Like on slide', slide.dataset.id);
+                    clickCount = 0;
+                }
+            });
+        });
+        
+        document.querySelectorAll('.like-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.classList.toggle('liked');
+            });
+        });
+
+    </script>
+</body>
+</html>
